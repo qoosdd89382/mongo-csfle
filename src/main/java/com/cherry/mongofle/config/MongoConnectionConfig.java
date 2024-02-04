@@ -1,5 +1,6 @@
 package com.cherry.mongofle.config;
 
+import com.cherry.mongofle.po.DoctorPo;
 import com.cherry.mongofle.po.PatientPo;
 import com.mongodb.AutoEncryptionSettings;
 import com.mongodb.ClientEncryptionSettings;
@@ -62,19 +63,24 @@ public class MongoConnectionConfig {
             MongoJsonSchema patientSchema = schemaCreator
                     .filter(MongoJsonSchemaCreator.encryptedOnly())
                     .createSchemaFor(PatientPo.class);
+            MongoJsonSchema doctorScheme = schemaCreator
+                    .filter(MongoJsonSchemaCreator.encryptedOnly())
+                    .createSchemaFor(DoctorPo.class);
 
             AutoEncryptionSettings autoEncryptionSettings = AutoEncryptionSettings.builder()
                     .keyVaultNamespace(keyVaultNamespace)
                     .kmsProviders(kmsProviders)
                     .extraOptions(Map.of(
                             // mac local
-//                            "cryptSharedLibPath", "mongo_crypt_shared_v1-macos-arm64-enterprise-7.0.5/lib/mongo_crypt_v1.dylib",
+                            "cryptSharedLibPath", "mongo_crypt_shared_v1-macos-arm64-enterprise-7.0.5/lib/mongo_crypt_v1.dylib",
                             // container
-                            "cryptSharedLibPath", "/app/mongo_crypt/lib/mongo_crypt_v1.so",
+//                            "cryptSharedLibPath", "/app/mongo_crypt/lib/mongo_crypt_v1.so",
                             "cryptSharedLibRequired", true))
-                    .schemaMap(Collections.singletonMap(
+                    .schemaMap(Map.of(
                             keyVaultDb + ".patient",
-                            patientSchema.schemaDocument().toBsonDocument()
+                            patientSchema.schemaDocument().toBsonDocument(),
+                            keyVaultDb + ".doctor",
+                            doctorScheme.schemaDocument().toBsonDocument()
                     ))
                     .build();
 
@@ -87,8 +93,8 @@ public class MongoConnectionConfig {
         byte[] localMasterKeyRead = new byte[96];
 
         try (InputStream fis = getClass().getResourceAsStream("/master-key.txt");) {
-            if (fis.read(localMasterKeyRead) < 96) {
-//                throw new Exception("Expected to read 96 bytes from file");
+            if (fis != null) {
+                fis.read(localMasterKeyRead);
             }
         }
         Map<String, Object> keyMap = new HashMap<String, Object>();
