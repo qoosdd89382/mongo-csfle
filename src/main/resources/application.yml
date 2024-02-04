@@ -1,0 +1,7 @@
+spring:
+  data:
+    mongodb:
+      uri: mongodb+srv://******************/test_db
+
+mongo-csfle:
+  autoenc-keyalt: demo-data-key
